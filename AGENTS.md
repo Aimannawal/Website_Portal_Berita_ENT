@@ -1,136 +1,1154 @@
-<laravel-boost-guidelines>
-=== foundation rules ===
+# AGENTS.md
 
-# Laravel Boost Guidelines
+## Project Overview
 
-The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
+This project is a custom-built Website Portal Berita for ENT GEN 21.
 
-## Foundational Context
+The website must be developed from scratch without using a CMS.
 
-This application is a Laravel application running on PHP 8.4. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
+The system serves two primary purposes:
 
-Before relying on a package's API, confirm its installed version:
-- PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
-- JS packages: check `package.json` for the installed versions.
+1. Public news and article portal.
+2. Internal content management system for authorized ENT GEN 21 divisions.
 
-## Skills Activation
+The application must support:
 
-This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
+- Authentication
+- Role-Based Access Control (RBAC)
+- News/article management
+- Product management
+- Category management
+- Content filtering
+- Rich Text Editor
+- Image/file upload
+- Public content access
+- Technical documentation
+- Responsive UI/UX
 
-## Conventions
+AI assistance is allowed during development, but all generated code must follow the project's architecture, security requirements, and coding conventions.
 
-- You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
-- Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
-- Check for existing components to reuse before writing a new one.
+---
 
-## Verification Scripts
+# 1. Core Requirements
 
-- Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
+## 1.1 No CMS
 
-## Application Structure & Architecture
+Do not use existing CMS platforms such as:
 
-- Stick to existing directory structure; don't create new base folders without approval.
-- Do not change the application's dependencies without approval.
+- WordPress
+- Joomla
+- Drupal
+- Strapi
+- Ghost
+- Directus
+- Other CMS platforms
 
-## Frontend Bundling
+The application must be implemented from scratch using the chosen application framework.
 
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `bun run build`, `bun run dev`, or `composer run dev`. Ask them.
+Frameworks and libraries are allowed.
 
-## Documentation Files
+## 1.2 RBAC
 
-- You must only create documentation files if explicitly requested by the user.
+The application MUST implement Role-Based Access Control.
 
-## Replies
+Access permissions must be determined by the authenticated user's role.
 
-- Be concise in your explanations - focus on what's important rather than explaining obvious details.
+At minimum, the system should support roles similar to:
 
-=== boost rules ===
+- Super Admin
+- Admin/Editor
+- Division Member
+- Public/User
 
-# Laravel Boost
+Exact roles may be adjusted during implementation, but permissions must remain centralized and clearly defined.
 
-## Project Rules
+Never implement authorization by relying only on frontend route hiding.
 
-- This project contains committed, area-grouped rules in `.ai/rules` when that directory exists (settled decisions, non-obvious traps, standing constraints). Framework and package guidelines that only apply to specific paths (testing, frontend, components) also live there, under `.ai/rules/boost` — this is not just recorded decisions, it is load-bearing guidance you have not seen inline. Before you enter plan mode or create/edit any file, you MUST first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch what a path match alone misses. Do not write code until you have read and are following every matching rule. If `.ai/rules` does not exist, continue without it.
+Every protected operation must be validated on the server.
 
-## Artisan
+## 1.3 CRUD
 
-- Run Artisan commands directly via the command line (e.g., `php artisan route:list`). Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
-- Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
-- Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
+The application MUST support CRUD operations for relevant resources.
 
-## Tinker
+Expected CRUD resources include:
 
-- Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
-- Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
-  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
+- Users
+- Roles/permissions
+- Articles/news
+- Categories
+- Products
+- Divisions
 
-=== php rules ===
+CRUD operations must respect RBAC permissions.
 
-# PHP
+Example:
 
-- Always use curly braces for control structures, even for single-line bodies.
-- Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
-- Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
-- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
-- Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
-- Use array shape type definitions in PHPDoc blocks.
+- Public users can read published content.
+- Editors can create and manage content.
+- Division members can manage their own division's products.
+- Administrators can manage all content.
+- Only authorized administrators can manage users and roles.
 
-=== deployments rules ===
+## 1.4 Categories and Filtering
 
-# Deployment
+News/articles and products must support categories.
 
-- Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
-- Activate the `deploying-to-cloud` skill whenever deploying to Laravel Cloud, configuring Cloud environments or resources, using the Cloud CLI, or troubleshooting Cloud deployments.
+Users must be able to:
 
-=== laravel/core rules ===
+- Browse content by category.
+- Filter content.
+- Search content where appropriate.
+- Navigate between categories.
+- Access category-specific pages.
 
-# Do Things the Laravel Way
+Filtering should preferably be implemented server-side when dealing with large datasets.
 
-- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `php artisan list` and check their parameters with `php artisan [command] --help`.
-- If you're creating a generic PHP class, use `php artisan make:class`.
-- Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
+Avoid loading the entire database into the browser just to perform filtering.
 
-### Model Creation
+## 1.5 Rich Text Editor
 
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
+The content management interface must provide a Rich Text Editor for creating and editing articles/news.
 
-## APIs & Eloquent Resources
+The editor should support common formatting such as:
 
-- For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
+- Headings
+- Paragraphs
+- Bold
+- Italic
+- Links
+- Ordered lists
+- Unordered lists
+- Blockquotes
+- Images where required
 
-## URL Generation
+HTML generated by the editor must be sanitized before being rendered publicly.
 
-- When generating links to other pages, prefer named routes and the `route()` function.
+Never trust HTML submitted by users.
 
-## Testing
+## 1.6 Public Access
 
-- When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
-- Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
-- When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
+Published content must be accessible publicly without authentication.
 
-## Vite Error
+Public pages should include at minimum:
 
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `bun run build` or ask the user to run `bun run dev` or `composer run dev`.
+- Homepage
+- News/article listing
+- Article detail
+- Category pages
+- Product listing
+- Product detail
+- Division/product information
 
-=== pint/core rules ===
+Draft or unpublished content MUST NOT be publicly accessible.
 
-# Laravel Pint Code Formatter
+## 1.7 Division Product Upload
 
-- If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
+The website must support product uploads from ENT GEN 21 divisions.
 
-=== phpunit/core rules ===
+A product may contain information such as:
 
-# PHPUnit
+- Product name
+- Description
+- Price
+- Category
+- Division
+- Product image
+- Additional images if required
+- Status
+- Created date
+- Updated date
 
-- This project uses PHPUnit. Create tests with `php artisan make:test --phpunit {name}`.
-- Do not include the test suite directory in `{name}`. Use `SomeFeatureTest`, not `Feature/SomeFeatureTest`.
-- Read the `testing-best-practices` skill for guidance on coverage, naming, structure, dependency isolation, and review.
+Division members must only be able to manage content they are authorized to manage.
 
-## Running Tests
+---
 
-- Run the narrowest set of tests that covers the change. Pass a file path or `--filter=testName` to `php artisan test --compact`.
-- Rerun a test after each change to it.
-- Run `vendor/bin/phpunit` to call the test runner directly. It accepts the same file path and `--filter=testName` arguments.
+# 2. Recommended Architecture
 
-</laravel-boost-guidelines>
+Use a clear separation of concerns.
+
+Recommended layers:
+
+```text
+Presentation Layer
+        ↓
+Controller / Route Handler
+        ↓
+Service / Business Logic
+        ↓
+Repository / Data Access
+        ↓
+Database
+```
+
+Do not place complex business logic directly inside:
+
+- UI components
+- Routes
+- Controllers
+- Templates
+
+Business rules should be placed in appropriate service/domain layers.
+
+---
+
+# 3. Authentication
+
+Authentication must be implemented securely.
+
+Requirements:
+
+- Passwords must never be stored in plaintext.
+- Use a modern password hashing algorithm such as Argon2id or bcrypt.
+- Sessions must be securely managed.
+- Authentication endpoints must be protected against brute-force attacks.
+- Sensitive authentication errors should not expose unnecessary information.
+- Logout must invalidate the active session.
+- Password reset functionality must use secure, expiring tokens if implemented.
+
+Never store authentication secrets in source code.
+
+---
+
+# 4. Authorization / RBAC
+
+Authorization must be enforced server-side.
+
+Use centralized authorization policies.
+
+Example conceptual permission model:
+
+```text
+article.create
+article.read
+article.update
+article.delete
+
+product.create
+product.read
+product.update
+product.delete
+
+category.create
+category.update
+category.delete
+
+user.manage
+role.manage
+```
+
+Do not scatter role checks throughout the application.
+
+Avoid code such as:
+
+```text
+if user.role == "admin"
+```
+
+everywhere.
+
+Prefer a centralized permission system.
+
+Example:
+
+```text
+authorize(user, "article.update", article)
+```
+
+The exact implementation depends on the framework.
+
+---
+
+# 5. Database Rules
+
+Use a relational database where appropriate.
+
+The database schema must be normalized and clearly documented.
+
+Potential entities include:
+
+```text
+users
+roles
+permissions
+role_permissions
+categories
+articles
+products
+divisions
+media
+```
+
+Relationships must be documented through ERD.
+
+Avoid unnecessary duplication of data.
+
+Use:
+
+- Primary keys
+- Foreign keys
+- Unique constraints
+- Appropriate indexes
+- Timestamps
+- Soft deletes where appropriate
+
+Database constraints should be used as an additional security and integrity layer.
+
+---
+
+# 6. Data Validation
+
+All user-controlled input MUST be validated.
+
+Validation must happen server-side even if frontend validation exists.
+
+Validate:
+
+- Required fields
+- Data types
+- String lengths
+- URLs
+- Numeric values
+- File types
+- File sizes
+- Relationships
+- Enum/status values
+
+Never trust:
+
+- Request body
+- Query parameters
+- Form data
+- Uploaded files
+- Cookies
+- HTTP headers
+
+Frontend validation is for user experience.
+
+Backend validation is for security.
+
+---
+
+# 7. Rich Text Security
+
+Rich Text Editor content must be sanitized before storage and/or rendering.
+
+Prevent:
+
+- XSS
+- Script injection
+- Malicious HTML
+- Dangerous URLs
+- Event-handler injection
+
+Never directly render arbitrary user-provided HTML.
+
+Avoid unsafe patterns equivalent to:
+
+```text
+renderRaw(userInput)
+```
+
+unless the content has already passed through a trusted sanitizer.
+
+---
+
+# 8. File Upload Security
+
+File uploads are security-sensitive.
+
+The system must:
+
+- Validate MIME type.
+- Validate file extension.
+- Restrict file size.
+- Generate safe filenames.
+- Avoid trusting the original filename.
+- Prevent executable file uploads.
+- Store uploaded files outside sensitive executable directories when possible.
+- Validate images before processing.
+- Prevent path traversal.
+
+Never construct filesystem paths directly from user-controlled filenames.
+
+Bad:
+
+```text
+/uploads/{original_filename}
+```
+
+Prefer generated identifiers:
+
+```text
+/uploads/{random_uuid}.webp
+```
+
+---
+
+# 9. Image Handling
+
+Images uploaded for articles and products should be optimized where practical.
+
+Consider:
+
+- Automatic resizing
+- Compression
+- WebP/AVIF conversion
+- Thumbnail generation
+- Maximum dimensions
+
+Do not allow extremely large images to unnecessarily consume server resources.
+
+---
+
+# 10. Public Content Rules
+
+Only content marked as published should be publicly visible.
+
+Example content lifecycle:
+
+```text
+Draft
+  ↓
+Review
+  ↓
+Published
+  ↓
+Archived
+```
+
+The exact workflow can be simplified if the project does not require editorial approval.
+
+However, draft content must never accidentally appear on public pages.
+
+Every public query should explicitly respect publication status.
+
+---
+
+# 11. API / Backend Rules
+
+If the application uses an API:
+
+- Use consistent HTTP status codes.
+- Validate request payloads.
+- Return predictable response structures.
+- Do not expose sensitive database fields.
+- Do not expose internal stack traces in production.
+- Implement authentication middleware where required.
+- Implement authorization middleware/policies.
+- Implement rate limiting for sensitive endpoints.
+
+Example response:
+
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+Error responses should not expose internal implementation details.
+
+---
+
+# 12. Frontend Rules
+
+The frontend must be:
+
+- Responsive
+- Accessible
+- Mobile-friendly
+- Fast
+- Consistent
+- Easy to navigate
+
+Support common viewport sizes:
+
+- Mobile
+- Tablet
+- Desktop
+
+Do not rely solely on color to communicate status.
+
+Buttons and interactive elements should have clear states:
+
+- Default
+- Hover
+- Focus
+- Active
+- Disabled
+- Loading
+- Error
+
+---
+
+# 13. UI/UX Guidelines
+
+The website is a news portal, therefore content readability is a priority.
+
+Prioritize:
+
+- Clear typography
+- Strong visual hierarchy
+- Readable article layouts
+- Consistent spacing
+- Clear navigation
+- Search/filter usability
+- Responsive cards
+- Good image proportions
+
+Avoid excessive animations.
+
+Avoid UI patterns that make the website look like a generic dashboard template.
+
+The public website should feel like a professional news/media portal.
+
+The admin area may use a more dashboard-oriented interface.
+
+---
+
+# 14. Accessibility
+
+Follow basic accessibility principles.
+
+Requirements:
+
+- Semantic HTML
+- Proper heading hierarchy
+- Accessible form labels
+- Keyboard navigation
+- Visible focus states
+- Meaningful alt text for images
+- Sufficient color contrast
+- Accessible error messages
+
+Do not use clickable `<div>` elements when a semantic button or link is appropriate.
+
+---
+
+# 15. SEO
+
+Public articles should be SEO-friendly.
+
+Each article should support:
+
+- Unique title
+- Meta description
+- SEO-friendly URL/slug
+- Canonical URL where appropriate
+- Open Graph metadata
+- Social sharing metadata
+- Proper heading hierarchy
+
+Example:
+
+```text
+/news/judul-artikel
+```
+
+Prefer readable slugs instead of database IDs.
+
+---
+
+# 16. URL and Routing
+
+Use predictable and human-readable routes.
+
+Example:
+
+```text
+/
+/news
+/news/{slug}
+/category/{slug}
+/products
+/products/{slug}
+/divisions/{slug}
+```
+
+Protected routes should be separated from public routes.
+
+Example:
+
+```text
+/admin
+/admin/articles
+/admin/products
+/admin/categories
+/admin/users
+```
+
+---
+
+# 17. Security Requirements
+
+Security must be considered during every stage of development.
+
+The application must protect against common web vulnerabilities, including:
+
+- XSS
+- SQL Injection
+- CSRF
+- Broken Access Control
+- Authentication attacks
+- Session attacks
+- File upload attacks
+- Path Traversal
+- IDOR
+- Mass Assignment
+- Sensitive Data Exposure
+
+Use parameterized queries or the framework's ORM/query builder.
+
+Never concatenate raw user input into SQL queries.
+
+---
+
+# 18. Mass Assignment Protection
+
+Only explicitly allowed fields may be modified by users.
+
+Never blindly accept the entire request body.
+
+For example, users must not be able to modify fields such as:
+
+```text
+role
+is_admin
+is_verified
+owner_id
+published_at
+```
+
+unless they have the appropriate permission.
+
+---
+
+# 19. IDOR Protection
+
+Never assume that knowing an object ID means the user is allowed to access it.
+
+Bad:
+
+```text
+GET /products/123
+```
+
+with only authentication checking.
+
+The server must also verify:
+
+```text
+Does this user have permission to access product 123?
+```
+
+This is especially important for division-owned products.
+
+---
+
+# 20. Secrets Management
+
+Never commit secrets into Git.
+
+Do not commit:
+
+```text
+.env
+.env.local
+API keys
+Database passwords
+JWT secrets
+Private keys
+Cloud credentials
+SMTP passwords
+```
+
+Use environment variables or a proper secret management system.
+
+Provide a safe example configuration such as:
+
+```text
+.env.example
+```
+
+without real credentials.
+
+---
+
+# 21. Error Handling
+
+Errors should be handled gracefully.
+
+Development:
+
+```text
+Detailed errors are acceptable.
+```
+
+Production:
+
+```text
+Do not expose:
+- Stack traces
+- SQL queries
+- File paths
+- Secrets
+- Internal service information
+```
+
+Provide user-friendly error pages such as:
+
+- 404
+- 403
+- 419/CSRF error where applicable
+- 429
+- 500
+
+---
+
+# 22. Logging
+
+Log important security and application events.
+
+Potential events:
+
+- Login success
+- Login failure
+- Logout
+- Permission denial
+- Content creation
+- Content update
+- Content deletion
+- Product upload
+- User/role changes
+
+Do not log:
+
+- Passwords
+- Authentication tokens
+- API secrets
+- Session cookies
+- Sensitive personal data unnecessarily
+
+---
+
+# 23. Testing
+
+Tests should be implemented for important functionality.
+
+At minimum, test:
+
+### Authentication
+
+- Login
+- Logout
+- Invalid credentials
+- Unauthorized access
+
+### Authorization
+
+- Admin access
+- Editor access
+- Division member access
+- Public access
+- Unauthorized CRUD attempts
+
+### Articles
+
+- Create
+- Read
+- Update
+- Delete
+- Publish
+- Draft visibility
+
+### Products
+
+- Create
+- Read
+- Update
+- Delete
+- Ownership/permission checks
+- File upload validation
+
+### Categories
+
+- Create
+- Update
+- Delete
+- Filtering
+
+Security-related tests should be prioritized.
+
+---
+
+# 24. Documentation Requirements
+
+The project MUST include technical documentation.
+
+Required documentation:
+
+```text
+README.md
+AGENTS.md
+ERD
+DFD
+UI/UX Wireframe
+```
+
+If appropriate, create:
+
+```text
+docs/
+├── architecture.md
+├── database.md
+├── api.md
+├── security.md
+└── deployment.md
+```
+
+---
+
+# 25. ERD Requirements
+
+The ERD must describe:
+
+- Entities
+- Attributes
+- Primary keys
+- Foreign keys
+- Relationships
+- Cardinality
+
+The ERD must match the actual database implementation.
+
+Do not create an ERD that differs from the implemented schema.
+
+---
+
+# 26. DFD Requirements
+
+The DFD should describe the major data flows between:
+
+- Public users
+- Admin
+- Editors
+- Division members
+- Application
+- Database
+- File/media storage
+
+At minimum, document:
+
+```text
+User
+ ↓
+Web Application
+ ↓
+Authentication / Authorization
+ ↓
+Business Logic
+ ↓
+Database
+```
+
+---
+
+# 27. Wireframe Requirements
+
+Wireframes should cover at least:
+
+### Public
+
+- Homepage
+- News listing
+- Article detail
+- Category page
+- Product listing
+- Product detail
+
+### Admin
+
+- Login
+- Dashboard
+- Article management
+- Product management
+- Category management
+- User management
+- Profile/settings where required
+
+Wireframes must reflect the actual features implemented.
+
+---
+
+# 28. Git Rules
+
+Use Git consistently.
+
+Recommended branch structure:
+
+```text
+main
+develop
+feature/*
+fix/*
+refactor/*
+```
+
+Example:
+
+```text
+feature/article-management
+feature/product-upload
+feature/rbac
+fix/authentication
+```
+
+Commit messages should be meaningful.
+
+Preferred format:
+
+```text
+feat: add article management
+feat: implement product upload
+fix: prevent unauthorized product access
+refactor: improve authorization service
+docs: add ERD documentation
+```
+
+Avoid commits such as:
+
+```text
+update
+fix
+final
+final2
+fix banget
+gas
+```
+
+---
+
+# 29. Dependency Rules
+
+Before adding a dependency:
+
+1. Check whether the framework already provides the required functionality.
+2. Check whether the dependency is actively maintained.
+3. Check its security history.
+4. Check bundle/server impact.
+5. Avoid dependencies that solve trivial problems.
+
+Do not add libraries just because they are popular.
+
+Every dependency should have a clear purpose.
+
+---
+
+# 30. AI Coding Rules
+
+AI assistance is allowed.
+
+However, AI-generated code must NOT be blindly accepted.
+
+Before implementing generated code:
+
+1. Understand what the code does.
+2. Check security implications.
+3. Check compatibility with the existing architecture.
+4. Check database implications.
+5. Check authorization requirements.
+6. Check validation.
+7. Run tests.
+8. Review the final diff.
+
+AI must not introduce:
+
+- Hardcoded credentials
+- Fake API keys
+- Insecure authentication
+- Disabled security mechanisms
+- Unvalidated user input
+- Client-only authorization
+- SQL injection vulnerabilities
+- Unsafe HTML rendering
+- Arbitrary file uploads
+
+If an AI-generated solution conflicts with the architecture, modify or reject it.
+
+---
+
+# 31. Development Workflow
+
+Follow this implementation order unless there is a strong reason to change it.
+
+## Phase 1 — Planning
+
+- Define requirements.
+- Define actors and roles.
+- Define permissions.
+- Design database.
+- Create ERD.
+- Create DFD.
+- Create wireframes.
+
+## Phase 2 — Project Setup
+
+- Initialize project.
+- Configure environment.
+- Configure database.
+- Configure authentication.
+- Configure basic frontend.
+- Configure development tooling.
+
+## Phase 3 — Authentication & RBAC
+
+Implement:
+
+- User authentication
+- Roles
+- Permissions
+- Authorization middleware/policies
+
+RBAC should be completed before implementing sensitive CRUD operations.
+
+## Phase 4 — Core Content
+
+Implement:
+
+- Categories
+- Articles/news
+- Rich Text Editor
+- Publishing workflow
+- Public news pages
+
+## Phase 5 — Products
+
+Implement:
+
+- Divisions
+- Products
+- Product categories
+- Product image upload
+- Product CRUD
+- Ownership/authorization
+
+## Phase 6 — Public Portal
+
+Implement:
+
+- Homepage
+- News listing
+- Article detail
+- Category filtering
+- Product listing
+- Product detail
+- Responsive design
+
+## Phase 7 — Security Hardening
+
+Review:
+
+- Authentication
+- Authorization
+- Input validation
+- XSS
+- CSRF
+- SQL injection
+- IDOR
+- File uploads
+- Rate limiting
+- Session security
+- Error handling
+
+## Phase 8 — Testing
+
+Run:
+
+- Unit tests
+- Integration tests
+- Feature tests
+- Authorization tests
+- Manual security testing
+
+## Phase 9 — Documentation
+
+Finalize:
+
+- README
+- ERD
+- DFD
+- Wireframes
+- Architecture documentation
+- Deployment instructions
+
+## Phase 10 — Deployment
+
+Before production deployment:
+
+- Disable debug mode.
+- Configure production environment.
+- Configure HTTPS.
+- Configure database backups.
+- Configure secure environment variables.
+- Verify file permissions.
+- Run migrations safely.
+- Verify public/private content access.
+
+---
+
+# 32. Definition of Done
+
+A feature is NOT considered complete until:
+
+- The feature works.
+- Validation exists.
+- Authorization exists where required.
+- Error handling exists.
+- UI is responsive.
+- Database relationships are correct.
+- Tests exist for important behavior.
+- No obvious security vulnerability is introduced.
+- Documentation is updated where necessary.
+
+For example, "Article CRUD complete" means:
+
+```text
+[ ] Create article
+[ ] Read article
+[ ] Update article
+[ ] Delete article
+[ ] Category support
+[ ] Rich Text Editor
+[ ] Image upload
+[ ] Validation
+[ ] Authorization
+[ ] Draft/published state
+[ ] Public article page
+[ ] Slug handling
+[ ] XSS protection
+[ ] Tests
+```
+
+---
+
+# 33. Important Implementation Principle
+
+Always prioritize:
+
+```text
+Security
+    ↓
+Correctness
+    ↓
+Maintainability
+    ↓
+Performance
+    ↓
+Developer convenience
+```
+
+Do not sacrifice security or data integrity merely to make implementation faster.
+
+The goal is not simply to make the website work.
+
+The goal is to build a maintainable, secure, and production-ready news portal that satisfies the ENT GEN 21 requirements.
