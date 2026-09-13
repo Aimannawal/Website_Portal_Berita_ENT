@@ -36,18 +36,36 @@
     </div>
 @endif
 
-{{-- ===== Filter Kategori ===== --}}
-<div class="mb-8 flex flex-wrap items-center gap-2">
+{{-- ===== Filter Kategori (dipisah per tipe konten) ===== --}}
+@php
+    $kategoriBerita = $categories->where('type', 'berita');
+    $kategoriArtikel = $categories->where('type', 'artikel');
+    $chipClass = fn ($slug) => 'rounded-full px-4 py-1.5 text-xs font-semibold transition '
+        . ($categorySlug === $slug ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200');
+@endphp
+<div class="mb-8 flex flex-wrap items-center gap-x-2 gap-y-3">
     <a href="{{ route('public.index') }}"
        class="rounded-full px-4 py-1.5 text-xs font-semibold transition {{ !$categorySlug ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
         Semua
     </a>
-    @foreach ($categories as $category)
-        <a href="{{ route('public.index', ['kategori' => $category->slug]) }}"
-           class="rounded-full px-4 py-1.5 text-xs font-semibold transition {{ $categorySlug === $category->slug ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}">
-            {{ $category->name }}
-        </a>
-    @endforeach
+
+    @if ($kategoriBerita->isNotEmpty())
+        <span class="ms-2 me-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Berita</span>
+        @foreach ($kategoriBerita as $category)
+            <a href="{{ route('public.index', ['kategori' => $category->slug]) }}" class="{{ $chipClass($category->slug) }}">
+                {{ $category->name }}
+            </a>
+        @endforeach
+    @endif
+
+    @if ($kategoriArtikel->isNotEmpty())
+        <span class="ms-2 me-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Artikel</span>
+        @foreach ($kategoriArtikel as $category)
+            <a href="{{ route('public.index', ['kategori' => $category->slug]) }}" class="{{ $chipClass($category->slug) }}">
+                {{ $category->name }}
+            </a>
+        @endforeach
+    @endif
 </div>
 
 {{-- ===== Hero + Featured Sidebar ===== --}}
@@ -88,7 +106,7 @@
         @forelse ($featuredItems as $item)
             <a href="{{ route('public.berita.show', $item->slug) }}"
                class="group flex flex-1 items-stretch gap-4 overflow-hidden rounded-xl border border-slate-100 bg-white p-3 transition hover:shadow-md">
-                <img src="{{ $thumb($item) }}" alt="{{ $item->title }}"
+                <img src="{{ $thumb($item) }}" alt="{{ $item->title }}" loading="lazy"
                      class="h-full min-h-[72px] w-24 shrink-0 rounded-lg object-cover sm:w-28">
                 <div class="flex min-w-0 flex-col justify-center py-1">
                     <div class="mb-1 flex items-center gap-2 text-[11px] font-semibold">
@@ -122,7 +140,7 @@
             @forelse ($berita as $item)
                 <a href="{{ route('public.berita.show', $item->slug) }}" class="group">
                     <div class="overflow-hidden rounded-xl">
-                        <img src="{{ $thumb($item) }}" alt="{{ $item->title }}"
+                        <img src="{{ $thumb($item) }}" alt="{{ $item->title }}" loading="lazy"
                              class="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105">
                     </div>
                     <div class="mt-3 flex items-center gap-2 text-[11px] font-semibold">
@@ -160,7 +178,7 @@
             @forelse ($artikel as $item)
                 <a href="{{ route('public.artikel.show', $item->slug) }}" class="group">
                     <div class="overflow-hidden rounded-xl">
-                        <img src="{{ $thumb($item) }}" alt="{{ $item->title }}"
+                        <img src="{{ $thumb($item) }}" alt="{{ $item->title }}" loading="lazy"
                              class="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105">
                     </div>
                     <div class="mt-3 flex items-center gap-2 text-[11px] font-semibold">
@@ -184,13 +202,42 @@
 
     {{-- Sidebar kanan --}}
     <aside class="space-y-10">
+        {{-- Paling Populer --}}
+        @if (!empty($popular) && $popular->isNotEmpty())
+        <div>
+            <h3 class="mb-4 text-lg font-extrabold tracking-tight">Paling Populer</h3>
+            <div class="space-y-4">
+                @foreach ($popular as $i => $item)
+                    <a href="{{ $item['route'] }}" class="group flex items-start gap-3">
+                        <span class="mt-0.5 w-6 shrink-0 text-2xl font-black leading-none text-slate-200 transition group-hover:text-red-500">
+                            {{ $i + 1 }}
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-semibold text-red-600">{{ $item['category'] ?? $item['type'] }}</p>
+                            <h4 class="mt-0.5 line-clamp-2 text-sm font-bold leading-snug transition group-hover:text-red-600">
+                                {{ $item['title'] }}
+                            </h4>
+                            <p class="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                {{ number_format($item['views']) }} tayangan
+                            </p>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         {{-- Must Read --}}
         <div>
             <h3 class="mb-4 text-lg font-extrabold tracking-tight">Wajib Dibaca</h3>
             <div class="space-y-4">
                 @forelse ($mustRead as $item)
                     <a href="{{ route('public.artikel.show', $item->slug) }}" class="group flex gap-3">
-                        <img src="{{ $thumb($item) }}" alt="{{ $item->title }}"
+                        <img src="{{ $thumb($item) }}" alt="{{ $item->title }}" loading="lazy"
                              class="h-16 w-20 shrink-0 rounded-lg object-cover">
                         <div class="min-w-0">
                             <p class="text-[11px] font-semibold text-red-600">{{ $item->category?->name ?? 'Artikel' }}</p>

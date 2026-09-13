@@ -22,6 +22,7 @@ class Artikel extends Model
 
     protected $casts = [
         'published_at' => 'datetime',
+        'views' => 'integer',
     ];
 
     public function category(): BelongsTo

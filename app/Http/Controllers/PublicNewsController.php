@@ -42,39 +42,100 @@ class PublicNewsController extends Controller
 
         $categories = Category::all();
 
-        // Hero hanya tampil di beranda tanpa filter/pencarian
+        // Hero hanya tampil di beranda tanpa filter/pencarian (ID di-cache 10 menit)
         $heroBerita = null;
         $featuredItems = collect();
 
         if (!$isSearching && !$categorySlug) {
-            $heroBerita = Berita::published()
-                ->with(['category', 'penulis', 'images'])
-                ->latest('published_at')
-                ->first();
+            $heroId = \Illuminate\Support\Facades\Cache::remember('home_hero_id', 600, fn () =>
+                Berita::published()->latest('published_at')->value('id')
+            );
+
+            $heroBerita = $heroId
+                ? Berita::published()->with(['category', 'penulis', 'images'])->find($heroId)
+                : null;
+
+            // ->all() agar yang di-cache array primitif, bukan objek Collection
+            $featuredIds = \Illuminate\Support\Facades\Cache::remember('home_featured_ids', 600, fn () =>
+                Berita::published()
+                    ->when($heroId, fn ($q) => $q->where('id', '!=', $heroId))
+                    ->latest('published_at')
+                    ->take(4)
+                    ->pluck('id')
+                    ->all()
+            );
 
             $featuredItems = Berita::published()
                 ->with(['category', 'penulis', 'images'])
-                ->when($heroBerita, fn ($q) => $q->where('id', '!=', $heroBerita->id))
+                ->whereIn('id', $featuredIds)
                 ->latest('published_at')
-                ->take(4)
                 ->get();
         }
 
+        $mustReadIds = \Illuminate\Support\Facades\Cache::remember('home_must_read_ids', 600, fn () =>
+            Artikel::published()->latest('published_at')->take(3)->pluck('id')->all()
+        );
+
         $mustRead = Artikel::published()
             ->with(['category', 'penulis', 'images'])
+            ->whereIn('id', $mustReadIds)
             ->latest('published_at')
-            ->take(3)
             ->get();
 
-        $creators = \App\Models\User::whereHas('beritaDitulis', fn ($q) => $q->published())
+        // Konten paling populer berdasarkan jumlah tayangan
+        $popular = Berita::published()
+            ->with(['category', 'images'])
+            ->orderByDesc('views')
+            ->take(4)
+            ->get(['id', 'category_id', 'title', 'slug', 'views', 'published_at'])
+            ->map(fn ($b) => [
+                'title' => $b->title,
+                'slug' => $b->slug,
+                'views' => $b->views,
+                'category' => $b->category?->name,
+                'published_at' => $b->published_at,
+                'image' => $b->images->first()?->url,
+                'route' => route('public.berita.show', $b->slug),
+                'type' => 'Berita',
+            ])
+            ->concat(
+                Artikel::published()
+                    ->with(['category', 'images'])
+                    ->orderByDesc('views')
+                    ->take(4)
+                    ->get(['id', 'category_id', 'title', 'slug', 'views', 'published_at'])
+                    ->map(fn ($a) => [
+                        'title' => $a->title,
+                        'slug' => $a->slug,
+                        'views' => $a->views,
+                        'category' => $a->category?->name,
+                        'published_at' => $a->published_at,
+                        'image' => $a->images->first()?->url,
+                        'route' => route('public.artikel.show', $a->slug),
+                        'type' => 'Artikel',
+                    ])
+            )
+            ->sortByDesc('views')
+            ->take(4)
+            ->values();
+
+        $creatorIds = \Illuminate\Support\Facades\Cache::remember('home_creator_ids', 600, fn () =>
+            \App\Models\User::whereHas('beritaDitulis', fn ($q) => $q->published())
+                ->withCount(['beritaDitulis' => fn ($q) => $q->published()])
+                ->orderByDesc('berita_ditulis_count')
+                ->take(4)
+                ->pluck('id')
+                ->all()
+        );
+
+        $creators = \App\Models\User::whereIn('id', $creatorIds)
             ->withCount(['beritaDitulis' => fn ($q) => $q->published()])
             ->orderByDesc('berita_ditulis_count')
-            ->take(4)
             ->get();
 
         return view('public.index', compact(
             'berita', 'artikel', 'categories', 'categorySlug', 'search', 'isSearching',
-            'heroBerita', 'featuredItems', 'mustRead', 'creators'
+            'heroBerita', 'featuredItems', 'mustRead', 'popular', 'creators'
         ));
     }
 
@@ -91,6 +152,40 @@ class PublicNewsController extends Controller
         Subscriber::create($validated);
 
         return back()->with('newsletter_success', 'Berhasil! Anda kini terdaftar sebagai pelanggan NewsHub.');
+    }
+
+    public function sitemap()
+    {
+        $berita = Berita::published()->latest('published_at')->get(['slug', 'published_at', 'updated_at']);
+        $artikel = Artikel::published()->latest('published_at')->get(['slug', 'published_at', 'updated_at']);
+
+        return response()
+            ->view('public.sitemap', compact('berita', 'artikel'))
+            ->header('Content-Type', 'application/xml');
+    }
+
+    public function feed()
+    {
+        $berita = Berita::published()->with('category')->latest('published_at')->take(20)->get();
+        $artikel = Artikel::published()->with('category')->latest('published_at')->take(20)->get();
+
+        $items = $berita->map(fn ($b) => [
+            'title' => $b->title,
+            'link' => route('public.berita.show', $b->slug),
+            'description' => $b->excerpt,
+            'category' => $b->category?->name,
+            'date' => $b->published_at,
+        ])->concat($artikel->map(fn ($a) => [
+            'title' => $a->title,
+            'link' => route('public.artikel.show', $a->slug),
+            'description' => $a->excerpt,
+            'category' => $a->category?->name,
+            'date' => $a->published_at,
+        ]))->sortByDesc('date')->take(20)->values();
+
+        return response()
+            ->view('public.feed', ['items' => $items])
+            ->header('Content-Type', 'application/rss+xml');
     }
 
     public function page(string $slug)
@@ -116,6 +211,12 @@ class PublicNewsController extends Controller
             ->with(['category', 'penulis', 'images'])
             ->where('slug', $slug)
             ->firstOrFail();
+
+        // Hitung tayangan sekali per sesi agar refresh tidak menggembungkan angka
+        if (!session()->has("viewed_berita.{$berita->id}")) {
+            $berita->increment('views');
+            session()->put("viewed_berita.{$berita->id}", true);
+        }
 
         $related = Berita::published()
             ->with(['category', 'images'])
@@ -144,6 +245,11 @@ class PublicNewsController extends Controller
             ->with(['category', 'penulis', 'images'])
             ->where('slug', $slug)
             ->firstOrFail();
+
+        if (!session()->has("viewed_artikel.{$artikel->id}")) {
+            $artikel->increment('views');
+            session()->put("viewed_artikel.{$artikel->id}", true);
+        }
 
         $related = Artikel::published()
             ->with(['category', 'images'])

@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PublicNewsController;
+use App\Http\Controllers\SubscriberController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,8 @@ Route::post('/langganan', [PublicNewsController::class, 'subscribe'])
 Route::get('/berita/{slug}', [PublicNewsController::class, 'showBerita'])->name('public.berita.show');
 Route::get('/artikel/{slug}', [PublicNewsController::class, 'showArtikel'])->name('public.artikel.show');
 Route::get('/halaman/{slug}', [PublicNewsController::class, 'page'])->name('public.page');
+Route::get('/sitemap.xml', [PublicNewsController::class, 'sitemap'])->name('public.sitemap');
+Route::get('/feed', [PublicNewsController::class, 'feed'])->name('public.feed');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardRedirectController::class, 'redirect'])->name('dashboard');
@@ -32,6 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:webmaster')->prefix('dashboard/wm')->name('wm.')->group(function () {
         Route::get('/', [WmDashboardController::class, 'index'])->name('dashboard');
         Route::resource('users', UserManagementController::class)->except('show');
+        Route::get('subscribers/export', [SubscriberController::class, 'export'])->name('subscribers.export');
+        Route::resource('subscribers', SubscriberController::class)->only(['index', 'destroy']);
     });
 
     Route::middleware('role:webmaster|perencanaan_konten')->prefix('dashboard/pk')->name('pk.')->group(function () {

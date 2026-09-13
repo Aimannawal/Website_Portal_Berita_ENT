@@ -9,7 +9,10 @@
     <meta property="og:description" content="@yield('meta_description', 'Portal berita ENT GEN 21 — kabar terkini, artikel pilihan, dan sorotan mingguan dari redaksi kami.')">
     <meta property="og:type" content="@yield('og_type', 'website')">
     <meta property="og:image" content="@yield('og_image', asset('images/placeholder.svg'))">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <link rel="canonical" href="{{ url()->current() }}">
     <meta name="twitter:card" content="summary_large_image">
+    <link rel="alternate" type="application/rss+xml" title="RSS NewsHub" href="{{ route('public.feed') }}">
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>

@@ -1,58 +1,65 @@
 <x-guest-layout>
-    <div class="mb-7">
-        <p class="text-xs font-bold uppercase tracking-[.18em] text-[#6d94d3]">Akses workspace</p>
-        <h1 class="mt-2 text-2xl font-bold text-[#182338]">Buat akun baru</h1>
-        <p class="mt-2 text-sm leading-6 text-[#64748b]">Daftarkan akun untuk masuk ke Portal Berita.</p>
+    {{-- Brand --}}
+    <a href="{{ route('public.index') }}" class="flex items-center gap-2">
+        <span class="grid h-8 w-8 place-items-center rounded-lg bg-violet-600 text-sm font-black text-white">N</span>
+        <span class="text-lg font-extrabold tracking-tight text-slate-900">NewsHub</span>
+    </a>
+
+    {{-- Heading --}}
+    <div class="mt-10">
+        <h1 class="text-4xl font-extrabold leading-tight tracking-tight text-slate-900">
+            Create<br>Your Account
+        </h1>
+        <p class="mt-3 text-sm text-slate-500">Daftarkan akun untuk bergabung dengan ruang kerja redaksi</p>
     </div>
 
-    <form method="POST" action="{{ route('register') }}">
+    <form method="POST" action="{{ route('register') }}" class="mt-8">
         @csrf
 
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" class="portal-input mt-1 block" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
+            <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus autocomplete="name"
+                   placeholder="Nama lengkap"
+                   class="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100">
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         <!-- Email Address -->
         <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="portal-input mt-1 block" type="email" name="email" :value="old('email')" required autocomplete="username" />
+            <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="username"
+                   placeholder="nama@email.com"
+                   class="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100">
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
         <!-- Password -->
         <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="portal-input mt-1 block"
-                            type="password"
-                            name="password"
-                            required autocomplete="new-password" />
-
+            <input id="password" type="password" name="password" required autocomplete="new-password"
+                   placeholder="Kata sandi"
+                   class="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100">
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <!-- Confirm Password -->
         <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input id="password_confirmation" class="portal-input mt-1 block"
-                            type="password"
-                            name="password_confirmation" required autocomplete="new-password" />
-
+            <input id="password_confirmation" type="password" name="password_confirmation" required autocomplete="new-password"
+                   placeholder="Ulangi kata sandi"
+                   class="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100">
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
-                {{ __('Already registered?') }}
-            </a>
-
-            <x-primary-button class="portal-button portal-button-accent ms-4 border-0">
-                Daftar
-            </x-primary-button>
+        <!-- Sign Up -->
+        <div class="mt-8">
+            <button type="submit"
+                    class="rounded-xl bg-violet-600 px-10 py-3 text-sm font-bold text-white shadow-lg shadow-violet-600/30 transition hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-200">
+                Sign Up
+            </button>
         </div>
     </form>
+
+    {{-- Footer link --}}
+    <p class="mt-auto pt-10 text-sm text-slate-500">
+        Sudah punya akun?
+        <a href="{{ route('login') }}" class="font-bold text-violet-600 transition hover:text-violet-700">Sign In</a>
+    </p>
 </x-guest-layout>

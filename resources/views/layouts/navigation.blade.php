@@ -43,6 +43,7 @@
         <div class="mt-8 border-t border-[#dce6f5] pt-5">
             @role('webmaster')
                 <a href="{{ route('wm.users.index') }}" class="mb-2 block rounded-xl px-3 py-2.5 text-sm font-semibold text-[#64748b] hover:bg-[#f5f8fd] hover:text-[#182338]">Kelola User</a>
+                <a href="{{ route('wm.subscribers.index') }}" class="mb-2 block rounded-xl px-3 py-2.5 text-sm font-semibold text-[#64748b] hover:bg-[#f5f8fd] hover:text-[#182338]">Kelola Pelanggan</a>
             @endrole
             <a href="{{ route('profile.edit') }}" class="block rounded-xl px-3 py-2.5 text-sm font-semibold text-[#64748b] hover:bg-[#f5f8fd] hover:text-[#182338]">Profil Saya</a>
             <form method="POST" action="{{ route('logout') }}" class="mt-2">
