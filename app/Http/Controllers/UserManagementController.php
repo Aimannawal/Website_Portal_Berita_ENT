@@ -21,10 +21,9 @@ class UserManagementController extends Controller
 
     public function create()
     {
-        $roles = Role::all();
         $divisions = Division::all();
 
-        return view('users.create', compact('roles', 'divisions'));
+        return view('users.create', compact('divisions'));
     }
 
     public function store(Request $request)
@@ -33,8 +32,7 @@ class UserManagementController extends Controller
             'name'        => ['required', 'string', 'max:255'],
             'email'       => ['required', 'email', 'unique:users,email'],
             'password'    => ['required', 'string', 'min:8'],
-            'division_id' => ['nullable', 'exists:divisions,id', 'required_without:role'],
-            'role'        => ['nullable', 'exists:roles,name', 'required_without:division_id'],
+            'division_id' => ['required', 'exists:divisions,id'],
         ]);
         $access = $this->resolveAccess($data);
 
@@ -52,10 +50,9 @@ class UserManagementController extends Controller
 
     public function edit(User $user)
     {
-        $roles = Role::all();
         $divisions = Division::all();
 
-        return view('users.edit', compact('user', 'roles', 'divisions'));
+        return view('users.edit', compact('user', 'divisions'));
     }
 
     public function update(Request $request, User $user)
@@ -64,8 +61,7 @@ class UserManagementController extends Controller
             'name'        => ['required', 'string', 'max:255'],
             'email'       => ['required', 'email', 'unique:users,email,' . $user->id],
             'password'    => ['nullable', 'string', 'min:8'],
-            'division_id' => ['nullable', 'exists:divisions,id', 'required_without:role'],
-            'role'        => ['nullable', 'exists:roles,name', 'required_without:division_id'],
+            'division_id' => ['required', 'exists:divisions,id'],
         ]);
         $access = $this->resolveAccess($data);
 
