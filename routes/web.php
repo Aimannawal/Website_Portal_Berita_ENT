@@ -8,6 +8,7 @@ use App\Http\Controllers\Dashboard\PkDashboardController;
 use App\Http\Controllers\Dashboard\WmDashboardController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PublicNewsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserManagementController;
@@ -42,6 +43,8 @@ Route::middleware('auth')->group(function () {
         Route::resource('artikel', ArtikelController::class);
         Route::delete('artikel/{artikel}/images/{media}', [ArtikelController::class, 'destroyImage'])
             ->name('artikel.images.destroy');
+
+        Route::resource('products', ProductController::class)->except('show');
 
         Route::resource('tasks', TaskController::class)->only(['index', 'create', 'store', 'show']);
     });

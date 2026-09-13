@@ -18,7 +18,7 @@
     </div>
 @endif
 
-<div class="prose max-w-none">
+<div class="rich-content max-w-none">
     {!! $artikel->content !!}
 </div>
 @endsection

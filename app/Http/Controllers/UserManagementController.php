@@ -6,6 +6,8 @@ use App\Models\Division;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
 class UserManagementController extends Controller
@@ -31,18 +33,19 @@ class UserManagementController extends Controller
             'name'        => ['required', 'string', 'max:255'],
             'email'       => ['required', 'email', 'unique:users,email'],
             'password'    => ['required', 'string', 'min:8'],
-            'division_id' => ['required', 'exists:divisions,id'],
-            'role'        => ['required', 'exists:roles,name'],
+            'division_id' => ['nullable', 'exists:divisions,id', 'required_without:role'],
+            'role'        => ['nullable', 'exists:roles,name', 'required_without:division_id'],
         ]);
+        $access = $this->resolveAccess($data);
 
         $user = User::create([
             'name'        => $data['name'],
             'email'       => $data['email'],
             'password'    => Hash::make($data['password']),
-            'division_id' => $data['division_id'],
+            'division_id' => $access['division_id'],
         ]);
 
-        $user->assignRole($data['role']);
+        $user->assignRole($access['role']);
 
         return redirect()->route('wm.users.index')->with('success', 'User berhasil dibuat.');
     }
@@ -61,18 +64,19 @@ class UserManagementController extends Controller
             'name'        => ['required', 'string', 'max:255'],
             'email'       => ['required', 'email', 'unique:users,email,' . $user->id],
             'password'    => ['nullable', 'string', 'min:8'],
-            'division_id' => ['required', 'exists:divisions,id'],
-            'role'        => ['required', 'exists:roles,name'],
+            'division_id' => ['nullable', 'exists:divisions,id', 'required_without:role'],
+            'role'        => ['nullable', 'exists:roles,name', 'required_without:division_id'],
         ]);
+        $access = $this->resolveAccess($data);
 
         $user->update([
             'name'        => $data['name'],
             'email'       => $data['email'],
-            'division_id' => $data['division_id'],
+            'division_id' => $access['division_id'],
             ...(!empty($data['password']) ? ['password' => Hash::make($data['password'])] : []),
         ]);
 
-        $user->syncRoles([$data['role']]);
+        $user->syncRoles([$access['role']]);
 
         return redirect()->route('wm.users.index')->with('success', 'User berhasil diupdate.');
     }
@@ -82,5 +86,34 @@ class UserManagementController extends Controller
         $user->delete();
 
         return redirect()->route('wm.users.index')->with('success', 'User berhasil dihapus.');
+    }
+
+    private function resolveAccess(array $data): array
+    {
+        $division = isset($data['division_id'])
+            ? Division::findOrFail($data['division_id'])
+            : Division::where('slug', Str::replace('_', '-', $data['role']))->first();
+
+        if (!$division) {
+            throw ValidationException::withMessages([
+                'role' => 'Role tersebut belum memiliki divisi yang sesuai.',
+            ]);
+        }
+
+        $role = Str::replace('-', '_', $division->slug);
+
+        if (isset($data['role']) && $data['role'] !== $role) {
+            throw ValidationException::withMessages([
+                'role' => 'Role dan divisi harus berasal dari pasangan yang sama.',
+            ]);
+        }
+
+        if (!Role::where('name', $role)->where('guard_name', 'web')->exists()) {
+            throw ValidationException::withMessages([
+                'role' => 'Divisi tersebut belum memiliki role yang sesuai.',
+            ]);
+        }
+
+        return ['division_id' => $division->id, 'role' => $role];
     }
 }
