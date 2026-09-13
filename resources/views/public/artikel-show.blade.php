@@ -1,24 +1,14 @@
 @extends('layouts.public')
-@section('title', $artikel->title)
+@section('title', $artikel->title . ' — NewsHub')
+@section('meta_description', \Illuminate\Support\Str::limit(strip_tags($artikel->excerpt ?: $artikel->content), 155))
+@section('og_type', 'article')
+@section('og_image', $artikel->images->isNotEmpty() ? $artikel->images->first()->url : ($artikel->thumbnail ? asset('storage/' . $artikel->thumbnail) : asset('images/placeholder.svg')))
 
 @section('content')
-<a href="{{ route('public.index') }}" class="text-sm underline">← Kembali</a>
-
-<p class="text-xs text-gray-500 mt-4">{{ $artikel->category?->name ?? 'Umum' }} — {{ $artikel->published_at?->format('d M Y') }}</p>
-<h1 class="text-3xl font-bold mt-1 mb-2">{{ $artikel->title }}</h1>
-<p class="text-sm text-gray-500 mb-6">
-    Oleh: {{ $artikel->penulis->pluck('name')->join(', ') ?: 'Redaksi' }}
-</p>
-
-@if ($artikel->images->isNotEmpty())
-    <div class="grid md:grid-cols-2 gap-3 mb-6">
-        @foreach ($artikel->images as $image)
-            <img src="{{ asset('storage/' . $image->file_path) }}" class="rounded w-full object-cover">
-        @endforeach
-    </div>
-@endif
-
-<div class="rich-content max-w-none">
-    {!! $artikel->content !!}
-</div>
+    @include('public.partials.content-detail', [
+        'item' => $artikel,
+        'related' => $related,
+        'typeLabel' => 'Artikel',
+        'showRouteName' => 'public.artikel.show',
+    ])
 @endsection

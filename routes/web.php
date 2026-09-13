@@ -15,8 +15,12 @@ use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicNewsController::class, 'index'])->name('public.index');
+Route::post('/langganan', [PublicNewsController::class, 'subscribe'])
+    ->middleware('throttle:5,1')
+    ->name('public.subscribe');
 Route::get('/berita/{slug}', [PublicNewsController::class, 'showBerita'])->name('public.berita.show');
 Route::get('/artikel/{slug}', [PublicNewsController::class, 'showArtikel'])->name('public.artikel.show');
+Route::get('/halaman/{slug}', [PublicNewsController::class, 'page'])->name('public.page');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardRedirectController::class, 'redirect'])->name('dashboard');

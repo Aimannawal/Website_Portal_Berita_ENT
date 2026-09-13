@@ -14,13 +14,27 @@
         if ($item->thumbnail) {
             return asset('storage/' . $item->thumbnail);
         }
-        return 'https://picsum.photos/seed/' . $item->id . '/800/500';
+        return asset('images/placeholder.svg');
     };
     $authorName = fn ($item) => $item->penulis->first()?->name ?? $item->creator?->name ?? 'Redaksi';
     $authorInitial = fn ($item) => strtoupper(Str::substr($authorName($item), 0, 1));
 @endphp
 
 @section('content')
+
+{{-- ===== Info hasil pencarian ===== --}}
+@if ($isSearching)
+    <div class="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+        <p class="text-sm text-slate-600">
+            Hasil pencarian untuk
+            <span class="font-bold text-slate-900">&ldquo;{{ $search }}&rdquo;</span>
+            — {{ $berita->total() + $artikel->total() }} konten ditemukan
+        </p>
+        <a href="{{ route('public.index') }}" class="rounded-full bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700">
+            Hapus pencarian
+        </a>
+    </div>
+@endif
 
 {{-- ===== Filter Kategori ===== --}}
 <div class="mb-8 flex flex-wrap items-center gap-2">
@@ -99,8 +113,9 @@
     {{-- Kolom utama: Latest News --}}
     <div class="lg:col-span-2">
         <div class="mb-6 flex items-center justify-between">
-            <h2 class="text-2xl font-extrabold tracking-tight">Berita Terbaru</h2>
-            <span class="text-sm font-semibold text-slate-400">Lihat semua &rsaquo;</span>
+            <h2 class="text-2xl font-extrabold tracking-tight">
+                {{ $isSearching ? 'Berita Ditemukan' : 'Berita Terbaru' }}
+            </h2>
         </div>
 
         <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
@@ -123,7 +138,13 @@
                     <p class="mt-2 text-[11px] text-slate-400">{{ $readTime($item) }}</p>
                 </a>
             @empty
-                <p class="col-span-full text-sm text-slate-400">Belum ada berita.</p>
+                <div class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/>
+                    </svg>
+                    <p class="mt-3 text-sm font-semibold text-slate-700">Tidak ada berita yang cocok</p>
+                    <p class="mt-1 text-xs text-slate-400">Coba kata kunci atau kategori lain.</p>
+                </div>
             @endforelse
         </div>
 
@@ -131,7 +152,9 @@
 
         {{-- Artikel / Weekly Highlight --}}
         <div class="mb-6 mt-12 flex items-center justify-between">
-            <h2 class="text-2xl font-extrabold tracking-tight">Sorotan Mingguan</h2>
+            <h2 class="text-2xl font-extrabold tracking-tight">
+                {{ $isSearching ? 'Artikel Ditemukan' : 'Sorotan Mingguan' }}
+            </h2>
         </div>
         <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             @forelse ($artikel as $item)
@@ -150,7 +173,10 @@
                     <p class="mt-2 text-[11px] text-slate-400">{{ $readTime($item) }}</p>
                 </a>
             @empty
-                <p class="col-span-full text-sm text-slate-400">Belum ada artikel.</p>
+                <div class="col-span-full rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+                    <p class="text-sm font-semibold text-slate-700">Tidak ada artikel yang cocok</p>
+                    <p class="mt-1 text-xs text-slate-400">Coba kata kunci atau kategori lain.</p>
+                </div>
             @endforelse
         </div>
         <div class="mt-8">{{ $artikel->links() }}</div>
@@ -181,6 +207,7 @@
         </div>
 
         {{-- Top Creator --}}
+        @if ($creators->isNotEmpty())
         <div>
             <h3 class="mb-4 text-lg font-extrabold tracking-tight">Kreator Teratas</h3>
             <div class="flex flex-wrap gap-4">
@@ -197,6 +224,7 @@
                 @endforeach
             </div>
         </div>
+        @endif
 
         {{-- Newsletter box --}}
         <div class="rounded-2xl bg-slate-900 p-6 text-white">
@@ -204,13 +232,25 @@
             <p class="mt-2 text-xs leading-relaxed text-slate-400">
                 Dapatkan ringkasan berita dan artikel terbaik setiap pagi langsung di email Anda.
             </p>
-            <form action="{{ route('public.index') }}" method="GET" class="mt-4 flex">
-                <input type="text" name="q" placeholder="Email Anda"
-                       class="w-full rounded-l-lg border-0 bg-white/10 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:bg-white/20">
-                <button type="submit" class="rounded-r-lg bg-red-600 px-3 py-2 text-sm font-semibold transition hover:bg-red-500">
-                    Ikut
-                </button>
-            </form>
+            @if (session('newsletter_success'))
+                <p class="mt-4 rounded-lg bg-green-500/15 px-3 py-2 text-xs font-medium text-green-300">
+                    {{ session('newsletter_success') }}
+                </p>
+            @else
+                <form action="{{ route('public.subscribe') }}" method="POST" class="mt-4">
+                    @csrf
+                    <div class="flex">
+                        <input type="email" name="email" placeholder="Email Anda" required
+                               class="w-full rounded-l-lg border-0 bg-white/10 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none focus:bg-white/20">
+                        <button type="submit" class="rounded-r-lg bg-red-600 px-3 py-2 text-sm font-semibold transition hover:bg-red-500">
+                            Ikut
+                        </button>
+                    </div>
+                    @error('email')
+                        <p class="mt-2 text-xs text-red-300">{{ $message }}</p>
+                    @enderror
+                </form>
+            @endif
         </div>
     </aside>
 </section>
